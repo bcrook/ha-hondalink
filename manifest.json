@@ -4,9 +4,9 @@
   "codeowners": ["@daviddelahoz"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/daviddelahoz/hass-hondalink",
+  "documentation": "https://github.com/daviddelahoz/ha-hondalink",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/daviddelahoz/hass-hondalink/issues",
+  "issue_tracker": "https://github.com/daviddelahoz/ha-hondalink/issues",
   "loggers": ["custom_components.hondalink"],
   "requirements": [],
   "version": "0.1.0"
