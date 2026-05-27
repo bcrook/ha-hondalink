@@ -140,7 +140,7 @@ Enter the VIN manually in the setup form. The integration will still try to fetc
 Useful validation commands:
 
 ```powershell
-python -m py_compile .\api.py .\config_flow.py
+python -m py_compile .\custom_components\hondalink\api.py .\custom_components\hondalink\config_flow.py
 ```
 
 HACS and hassfest workflow files are included under `.github/workflows/`, but nothing is published or released from this local workspace.
