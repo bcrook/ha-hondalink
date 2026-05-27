@@ -1,0 +1,7 @@
+{
+  "name": "HondaLink",
+  "content_in_root": false,
+  "render_readme": true,
+  "domains": ["sensor", "binary_sensor", "button", "lock", "device_tracker"],
+  "homeassistant": "2024.6.0"
+}

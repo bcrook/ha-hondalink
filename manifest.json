@@ -1,0 +1,13 @@
+{
+  "domain": "hondalink",
+  "name": "HondaLink",
+  "codeowners": ["@daviddelahoz"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/daviddelahoz/hass-hondalink",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/daviddelahoz/hass-hondalink/issues",
+  "loggers": ["custom_components.hondalink"],
+  "requirements": [],
+  "version": "0.1.0"
+}

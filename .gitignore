@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+hondalink_ha_development_summary*.md
+hondalink_ha_development_summary*.MD
