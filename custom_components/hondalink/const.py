@@ -24,8 +24,23 @@ DEFAULT_NAME = "HondaLink"
 DEFAULT_COUNTRY = "US"
 DEFAULT_LANGUAGE = "en"
 DEFAULT_SCAN_INTERVAL = 3
-DEFAULT_LOCK_COMMAND = "lck"
-DEFAULT_UNLOCK_COMMAND = "ulk"
+DEFAULT_LOCK_COMMAND = "alk"
+DEFAULT_UNLOCK_COMMAND = "dulk"
+LEGACY_LOCK_COMMAND = "lck"
+LEGACY_UNLOCK_COMMAND = "ulk"
+DEFAULT_DASHBOARD_FILTERS = [
+    "fuelLevel",
+    "odometer",
+    "oilLife",
+    "tireStatus",
+    "doorStatus",
+    "windowStatus",
+    "lightStatus",
+    "warningLamps",
+    "gpsData",
+    "remoteEngineStart",
+    "12V BATTERY STATUS",
+]
 
 CLIENT_ID = "HondaLinkAndroidApp0074"
 CLIENT_SECRET = "rETFrZcLyUycsSblksCP"

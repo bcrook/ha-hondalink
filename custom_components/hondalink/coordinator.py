@@ -12,6 +12,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .api import HondaLinkAPI, HondaLinkCommandError, HondaLinkError
 from .const import CONF_SCAN_INTERVAL, CONF_VIN, DEFAULT_SCAN_INTERVAL, DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: HondaLinkAPI) -> None:
@@ -30,6 +32,15 @@ class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await self.api.async_get_dashboard_latest(self.vin)
         except HondaLinkError as err:
             raise UpdateFailed(str(err)) from err
+
+    async def async_force_refresh(self) -> None:
+        try:
+            await self.api.async_request_dashboard_update(self.vin)
+        except HondaLinkCommandError as err:
+            _LOGGER.warning("HondaLink live dashboard refresh request failed: %s", err)
+        except HondaLinkError as err:
+            _LOGGER.warning("HondaLink live dashboard refresh request failed: %s", err)
+        await self.async_refresh()
 
     async def async_start_engine(self) -> None:
         await self._run_command(self.api.async_start_engine)

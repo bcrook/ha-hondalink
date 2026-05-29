@@ -53,7 +53,7 @@ BUTTONS: tuple[HondaLinkButtonDescription, ...] = (
         key="refresh",
         translation_key="refresh",
         icon="mdi:refresh",
-        press_fn=lambda coordinator: coordinator.async_request_refresh(),
+        press_fn=lambda coordinator: coordinator.async_force_refresh(),
     ),
 )
 

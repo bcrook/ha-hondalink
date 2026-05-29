@@ -2,6 +2,11 @@
   <img src="assets/logo.png" alt="HondaLink Home Assistant integration logo" width="180">
 </p>
 
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://hacs.xyz/)
+[![Version](https://img.shields.io/github/v/release/daviddelahoz/ha-hondalink)](https://github.com/daviddelahoz/ha-hondalink/releases)
+[![License](https://img.shields.io/github/license/daviddelahoz/ha-hondalink)](LICENSE)
+[![Maintenance](https://img.shields.io/maintenance/yes/2026.svg)](https://github.com/daviddelahoz/ha-hondalink)
+
 # HondaLink for Home Assistant
 
 Unofficial Home Assistant custom integration for HondaLink MY21 telematics vehicles.
@@ -98,7 +103,7 @@ After setup, open the integration options to change:
 - Lock command code
 - Unlock command code
 
-The default lock command is `lck`; the default unlock command is `ulk`.
+The default lock command is `alk`; the default unlock command is `dulk`.
 
 ## Troubleshooting
 

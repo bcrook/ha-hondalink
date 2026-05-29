@@ -24,6 +24,7 @@ from .const import (
     CONF_REFRESH_TOKEN,
     CONF_SESSION_ID,
     DEFAULT_COUNTRY,
+    DEFAULT_DASHBOARD_FILTERS,
     DEFAULT_LANGUAGE,
     DEFAULT_LOCK_COMMAND,
     DEFAULT_UNLOCK_COMMAND,
@@ -32,7 +33,11 @@ from .const import (
     HONDALINK_SYSTEM_ID,
     HONDA_HEADER_VERSION,
     IDENTITY_BASE,
+    LEGACY_LOCK_COMMAND,
+    LEGACY_UNLOCK_COMMAND,
 )
+
+_DYNAMIC_BACKEND_ERROR_CODE = "0x01130009"
 
 
 class HondaLinkError(Exception):
@@ -59,6 +64,11 @@ def utc_timestamp() -> str:
 
 def _lower_status(value: Any) -> str:
     return str(value or "").strip().lower()
+
+
+def _is_dynamic_backend_error(err: Exception) -> bool:
+    text = str(err)
+    return _DYNAMIC_BACKEND_ERROR_CODE in text or "Dynamic backend host not specified" in text
 
 
 def _redact_payload(value: Any) -> Any:
@@ -207,6 +217,29 @@ class HondaLinkAPI:
             raise HondaLinkError(f"Dashboard request failed: {_redact_payload(data)}")
         return data
 
+    async def async_request_dashboard_update(self, vin: str | None = None) -> HondaLinkCommandResult:
+        vin = vin or self.vin
+        if not vin:
+            raise HondaLinkError("VIN is required")
+        data = await self._request_api(
+            "POST",
+            "/REST/NGT/CIG/dbd/async",
+            json_body={"device": vin, "filters": DEFAULT_DASHBOARD_FILTERS},
+        )
+        response_body = data.get("responseBody") or {}
+        request_id = response_body.get("cigServiceRequestId")
+        status = _lower_status(data.get("status"))
+
+        if status not in ("success", "in_progress", ""):
+            message = response_body.get("errorMessage") or str(data)
+            raise HondaLinkCommandError(message)
+
+        if not request_id:
+            return HondaLinkCommandResult(None, data)
+
+        result = await self._poll_cig_result("dbd", request_id, timeout=60, poll_interval=3)
+        return HondaLinkCommandResult(request_id, result)
+
     async def async_start_engine(self, *, extend: bool = False) -> HondaLinkCommandResult:
         return await self._async_cig_command(
             "eng",
@@ -222,16 +255,33 @@ class HondaLinkAPI:
         )
 
     async def async_lock(self) -> HondaLinkCommandResult:
+        body = {"device": self._vin(), "pin": self._pin()}
+        if self.lock_command == DEFAULT_LOCK_COMMAND:
+            body["delay"] = {"unit": "Minutes", "value": 2}
+        try:
+            return await self._async_cig_command("lk", self.lock_command, body)
+        except HondaLinkCommandError as err:
+            if self.lock_command != LEGACY_LOCK_COMMAND or not _is_dynamic_backend_error(err):
+                raise
         return await self._async_cig_command(
             "lk",
-            self.lock_command,
-            {"device": self._vin(), "pin": self._pin()},
+            DEFAULT_LOCK_COMMAND,
+            {"device": self._vin(), "pin": self._pin(), "delay": {"unit": "Minutes", "value": 2}},
         )
 
     async def async_unlock(self) -> HondaLinkCommandResult:
+        try:
+            return await self._async_cig_command(
+                "lk",
+                self.unlock_command,
+                {"device": self._vin(), "pin": self._pin()},
+            )
+        except HondaLinkCommandError as err:
+            if self.unlock_command != LEGACY_UNLOCK_COMMAND or not _is_dynamic_backend_error(err):
+                raise
         return await self._async_cig_command(
             "lk",
-            self.unlock_command,
+            DEFAULT_UNLOCK_COMMAND,
             {"device": self._vin(), "pin": self._pin()},
         )
 
@@ -265,11 +315,14 @@ class HondaLinkAPI:
         timeout: int = 75,
         poll_interval: int = 3,
     ) -> HondaLinkCommandResult:
-        data = await self._request_api(
-            "POST",
-            f"/REST/NGT/CIG/{engine}/async/{command}",
-            json_body=body,
-        )
+        try:
+            data = await self._request_api(
+                "POST",
+                f"/REST/NGT/CIG/{engine}/async/{command}",
+                json_body=body,
+            )
+        except HondaLinkError as err:
+            raise HondaLinkCommandError(str(err)) from err
         response_body = data.get("responseBody") or {}
         request_id = response_body.get("cigServiceRequestId")
         status = _lower_status(data.get("status"))
