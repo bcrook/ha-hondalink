@@ -13,6 +13,7 @@ CONF_REFRESH_TOKEN = "refresh_token"
 CONF_EXPIRES_AT = "expires_at"
 CONF_COUNTRY = "country"
 CONF_LANGUAGE = "language"
+CONF_HIDAS_IDENT = "hidas_ident"
 CONF_DEVICE_ID = "device_id"
 CONF_SESSION_ID = "session_id"
 CONF_VEHICLE_INFO = "vehicle_info"
@@ -39,7 +40,14 @@ DEFAULT_DASHBOARD_FILTERS = [
     "warningLamps",
     "gpsData",
     "remoteEngineStart",
+    "12V BATTERY",
     "12V BATTERY STATUS",
+    "12V Battery Status",
+    "batteryStatus",
+    "batteryVoltageStatus",
+    "auxBatteryStatus",
+    "auxiliaryBatteryStatus",
+    "powerSupplyStatus",
 ]
 
 CLIENT_ID = "HondaLinkAndroidApp0074"

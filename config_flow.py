@@ -18,6 +18,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_EMAIL,
     CONF_EXPIRES_AT,
+    CONF_HIDAS_IDENT,
     CONF_LANGUAGE,
     CONF_LOCK_COMMAND,
     CONF_NAME,
@@ -206,6 +207,7 @@ class HondaLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_EXPIRES_AT: api.expires_at,
             CONF_COUNTRY: api.country,
             CONF_LANGUAGE: api.language,
+            CONF_HIDAS_IDENT: api.hidas_ident,
             CONF_DEVICE_ID: api.device_id,
             CONF_SESSION_ID: api.session_id,
         }

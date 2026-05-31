@@ -50,7 +50,19 @@ def first_path(data: dict[str, Any], paths: tuple[str, ...]) -> Any:
 def value_from_status_node(value: Any) -> Any:
     if not isinstance(value, dict):
         return value
-    for key in ("status", "state", "condition", "value", "text", "displayValue", "message"):
+    for key in (
+        "status",
+        "state",
+        "condition",
+        "value",
+        "text",
+        "displayValue",
+        "message",
+        "messageText",
+        "statusText",
+        "displayText",
+        "description",
+    ):
         item = value.get(key)
         if item not in (None, "", "unknown"):
             return value_from_status_node(item)
@@ -90,6 +102,9 @@ def find_12v_battery_status(data: dict[str, Any]) -> Any:
     )
     if direct not in (None, "", "unknown"):
         return value_from_status_node(direct)
+    text_status = _find_12v_text_status(data)
+    if text_status not in (None, "", "unknown"):
+        return text_status
     return _find_12v_battery_status(data)
 
 
@@ -117,7 +132,53 @@ def _find_12v_warning_lamp_status(data: dict[str, Any]) -> Any:
             has_12v = "12v" in text_lower or "12 v" in text_lower or "12 volt" in text_lower
             has_battery = "battery" in text_lower or "batt" in text_lower
             if has_12v and has_battery:
-                return message.get("condition") or message.get("status") or message.get("state")
+                return (
+                    message.get("condition")
+                    or message.get("status")
+                    or message.get("state")
+                    or message.get("value")
+                    or message.get("message")
+                    or message.get("messageText")
+                    or message.get("text")
+                    or "Detected"
+                )
+    return None
+
+
+def _find_12v_text_status(value: Any) -> Any:
+    if isinstance(value, dict):
+        text = " ".join(str(item) for item in value.values() if isinstance(item, str))
+        if _text_mentions_12v_battery(text):
+            status = value_from_status_node(value)
+            if status not in (None, "", "unknown") and not _text_mentions_12v_battery(str(status)):
+                return status
+            for key in (
+                "normal",
+                "ok",
+                "active",
+                "on",
+                "off",
+                "severity",
+                "alertState",
+                "lampState",
+                "indicator",
+                "available",
+            ):
+                item = value.get(key)
+                if item not in (None, "", "unknown"):
+                    return item
+            return "Detected"
+        for item in value.values():
+            status = _find_12v_text_status(item)
+            if status not in (None, "", "unknown"):
+                return status
+    elif isinstance(value, list):
+        for item in value:
+            status = _find_12v_text_status(item)
+            if status not in (None, "", "unknown"):
+                return status
+    elif isinstance(value, str) and _text_mentions_12v_battery(value):
+        return value
     return None
 
 
@@ -145,7 +206,9 @@ def _collect_12v_battery_candidates(value: Any, path: str, candidates: dict[str,
     if isinstance(value, dict):
         for key, item in value.items():
             item_path = f"{path}.{key}" if path else str(key)
-            if _looks_like_12v_battery_key(str(key)):
+            if _looks_like_12v_battery_key(str(key)) or (
+                isinstance(item, str) and _text_mentions_12v_battery(item)
+            ):
                 candidate = value_from_status_node(item)
                 candidates[item_path] = _attribute_safe_value(candidate if candidate is not None else item)
             _collect_12v_battery_candidates(item, item_path, candidates)
@@ -190,6 +253,13 @@ def _looks_like_12v_battery_key(key: str) -> bool:
         or (has_voltage and has_status)
         or has_power_supply
     )
+
+
+def _text_mentions_12v_battery(text: str) -> bool:
+    text_lower = text.lower()
+    has_12v = "12v" in text_lower or "12 v" in text_lower or "12 volt" in text_lower
+    has_battery = "battery" in text_lower or "batt" in text_lower
+    return has_12v and has_battery
 
 
 def _attribute_safe_value(value: Any) -> Any:

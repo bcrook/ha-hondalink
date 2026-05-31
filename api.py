@@ -20,6 +20,7 @@ from .const import (
     CONF_COUNTRY,
     CONF_DEVICE_ID,
     CONF_EXPIRES_AT,
+    CONF_HIDAS_IDENT,
     CONF_LANGUAGE,
     CONF_REFRESH_TOKEN,
     CONF_SESSION_ID,
@@ -106,6 +107,7 @@ class HondaLinkAPI:
         expires_at: float | None = None,
         country: str = DEFAULT_COUNTRY,
         language: str = DEFAULT_LANGUAGE,
+        hidas_ident: str | None = None,
         device_id: str | None = None,
         session_id: str | None = None,
         lock_command: str = DEFAULT_LOCK_COMMAND,
@@ -122,6 +124,7 @@ class HondaLinkAPI:
         self.expires_at = expires_at or 0
         self.country = country or DEFAULT_COUNTRY
         self.language = language or DEFAULT_LANGUAGE
+        self.hidas_ident = hidas_ident
         self.device_id = device_id or str(uuid.uuid4())
         self.session_id = session_id or str(uuid.uuid4())
         self.lock_command = lock_command or DEFAULT_LOCK_COMMAND
@@ -169,9 +172,10 @@ class HondaLinkAPI:
         self.expires_at = time.time() + max(expires_in - 300, 60)
         self.country = user.get("country_code") or self.country or DEFAULT_COUNTRY
         self.language = user.get("language_code") or self.language or DEFAULT_LANGUAGE
+        self.hidas_ident = user.get("hidas_ident") or self.hidas_ident
 
     async def async_ensure_login(self) -> None:
-        if self.access_token and self.expires_at > time.time():
+        if self.access_token and self.expires_at > time.time() and self.hidas_ident:
             return
         await self.async_login()
 
@@ -183,6 +187,7 @@ class HondaLinkAPI:
             CONF_EXPIRES_AT: self.expires_at,
             CONF_COUNTRY: self.country,
             CONF_LANGUAGE: self.language,
+            CONF_HIDAS_IDENT: self.hidas_ident,
             CONF_DEVICE_ID: self.device_id,
             CONF_SESSION_ID: self.session_id,
         }
@@ -432,7 +437,7 @@ class HondaLinkAPI:
             return payload
 
     def _api_headers(self) -> dict[str, str]:
-        return {
+        headers = {
             "Authorization": f"Bearer {self.access_token}",
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -443,11 +448,17 @@ class HondaLinkAPI:
             "hondaHeaderType.businessId": HONDALINK_BUSINESS_ID,
             "hondaHeaderType.systemId": HONDALINK_SYSTEM_ID,
             "hondaHeaderType.collectedTimestamp": utc_timestamp(),
+            "hondaHeaderType.collectedTimeStamp": utc_timestamp(),
+            "hondaHeaderType.clientType": "Mobile",
             "hondaHeaderType.deviceID": self.device_id,
             "hondaHeaderType.sessionID": self.session_id,
             "hondaHeaderType.country_code": self.country,
             "hondaHeaderType.language_code": self.language,
         }
+        if self.hidas_ident:
+            headers["hondaHeaderType.userId"] = self.hidas_ident
+            headers["hondaHeaderType.hidasId"] = self.hidas_ident
+        return headers
 
     def _vin(self) -> str:
         if not self.vin:
