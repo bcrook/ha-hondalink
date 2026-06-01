@@ -24,8 +24,8 @@ from .const import (
     CONF_LANGUAGE,
     CONF_REFRESH_TOKEN,
     CONF_SESSION_ID,
+    DASHBOARD_FILTER_SETS,
     DEFAULT_COUNTRY,
-    DEFAULT_DASHBOARD_FILTERS,
     DEFAULT_LANGUAGE,
     DEFAULT_LOCK_COMMAND,
     DEFAULT_UNLOCK_COMMAND,
@@ -39,6 +39,7 @@ from .const import (
 )
 
 _DYNAMIC_BACKEND_ERROR_CODE = "0x01130009"
+_INVALID_SCOPE_ERROR_CODE = "0001-01-1150"
 
 
 class HondaLinkError(Exception):
@@ -70,6 +71,11 @@ def _lower_status(value: Any) -> str:
 def _is_dynamic_backend_error(err: Exception) -> bool:
     text = str(err)
     return _DYNAMIC_BACKEND_ERROR_CODE in text or "Dynamic backend host not specified" in text
+
+
+def _is_invalid_scope_error(err: Exception) -> bool:
+    text = str(err)
+    return _INVALID_SCOPE_ERROR_CODE in text or "requested scope is invalid" in text.lower()
 
 
 def _redact_payload(value: Any) -> Any:
@@ -226,11 +232,27 @@ class HondaLinkAPI:
         vin = vin or self.vin
         if not vin:
             raise HondaLinkError("VIN is required")
-        data = await self._request_api(
-            "POST",
-            "/REST/NGT/CIG/dbd/async",
-            json_body={"device": vin, "filters": DEFAULT_DASHBOARD_FILTERS},
-        )
+        last_error: HondaLinkError | None = None
+        for filters in DASHBOARD_FILTER_SETS:
+            body: dict[str, Any] = {"device": vin}
+            if filters:
+                body["filters"] = filters
+            try:
+                data = await self._request_api(
+                    "POST",
+                    "/REST/NGT/CIG/dbd/async",
+                    json_body=body,
+                )
+                break
+            except HondaLinkError as err:
+                if not _is_invalid_scope_error(err):
+                    raise
+                last_error = err
+        else:
+            if last_error:
+                raise last_error
+            raise HondaLinkError("Dashboard refresh request failed")
+
         response_body = data.get("responseBody") or {}
         request_id = response_body.get("cigServiceRequestId")
         status = _lower_status(data.get("status"))

@@ -30,25 +30,16 @@ DEFAULT_UNLOCK_COMMAND = "dulk"
 LEGACY_LOCK_COMMAND = "lck"
 LEGACY_UNLOCK_COMMAND = "ulk"
 DEFAULT_DASHBOARD_FILTERS = [
-    "fuelLevel",
+    "DigitalTwin",
+    "VEHICLE RANGE",
     "odometer",
-    "oilLife",
-    "tireStatus",
-    "doorStatus",
-    "windowStatus",
-    "lightStatus",
-    "warningLamps",
-    "gpsData",
-    "remoteEngineStart",
-    "12V BATTERY",
-    "12V BATTERY STATUS",
-    "12V Battery Status",
-    "batteryStatus",
-    "batteryVoltageStatus",
-    "auxBatteryStatus",
-    "auxiliaryBatteryStatus",
-    "powerSupplyStatus",
+    "TIRE PRESSURE",
 ]
+DASHBOARD_FILTER_SETS = (
+    DEFAULT_DASHBOARD_FILTERS,
+    ["DigitalTwin"],
+    [],
+)
 
 CLIENT_ID = "HondaLinkAndroidApp0074"
 CLIENT_SECRET = "rETFrZcLyUycsSblksCP"
