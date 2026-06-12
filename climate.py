@@ -73,6 +73,10 @@ class HondaLinkClimate(HondaLinkEntity, ClimateEntity):
         return PRESET_OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        current_mode = self.hvac_mode
+        if hvac_mode == current_mode:
+            return
+
         if hvac_mode == HVACMode.OFF:
             await self.coordinator.api.async_stop_engine()
         else:
