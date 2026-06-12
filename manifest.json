@@ -1,10 +1,13 @@
 {
   "domain": "hondalink",
   "name": "HondaLink",
-  "codeowners": ["@daviddelahoz"],
+  "codeowners": ["@bcrook"],
   "config_flow": true,
-  "documentation": "https://github.com/daviddelahoz/ha-hondalink",
+  "dependencies": [],
+  "documentation": "https://github.com/bcrook/ha-hondalink",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/daviddelahoz/ha-hondalink/issues",
-  "version": "1.1.0-pilot2026"
+  "issue_tracker": "https://github.com/bcrook/ha-hondalink/issues",
+  "loggers": ["custom_components.hondalink"],
+  "requirements": [],
+  "version": "0.1.0-pilot2026"
 }
