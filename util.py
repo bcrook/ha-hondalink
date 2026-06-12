@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any
 
+_LOGGER = logging.getLogger(__name__)
 
 def get_path(data: dict[str, Any], path: str, default: Any = None) -> Any:
     cur: Any = data
@@ -172,10 +174,64 @@ def _collect_leaf_paths(data: Any, path: str, paths: list[str], limit: int) -> N
         paths.append(path)
 
 
-def parse_iso_datetime(value: str | None) -> datetime | None:
-    if not value:
+def parse_iso_datetime(value: Any) -> datetime | None:
+    if not value or value == "unknown":
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
     except (TypeError, ValueError):
         return None
+
+
+def dms_to_decimal(value: Any) -> float | None:
+    if not value or value == "unknown":
+        return None
+    try:
+        parts = str(value).split(",")
+        if len(parts) != 3:
+            return None
+        degrees = float(parts[0])
+        sign = -1 if degrees < 0 else 1
+        minutes = float(parts[1])
+        seconds = float(parts[2])
+        return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+    except (TypeError, ValueError):
+        return None
+
+
+def any_open_state(body: dict[str, Any], base: str, keys: list[str], state_key: str = "openState") -> bool | None:
+    found = False
+    for key in keys:
+        value = get_path(body, f"{base}.{key}.{state_key}")
+        if value is not None:
+            found = True
+            if str(value).lower() != "closed":
+                return True
+    return False if found else None
+
+
+def any_light_on(body: dict[str, Any]) -> bool | None:
+    lights = get_path(body, "lightStatus", {})
+    if not isinstance(lights, dict):
+        return None
+    found = False
+    for item in lights.values():
+        if isinstance(item, dict) and "lightState" in item:
+            found = True
+            if str(item.get("lightState")).upper() != "OFF":
+                return True
+    return False if found else None
+
+
+def all_door_locks_locked(body: dict[str, Any]) -> bool | None:
+    doors = get_path(body, "doorStatus", {})
+    if not isinstance(doors, dict):
+        return None
+    states: list[str] = []
+    for key in ("firstRowDriver", "firstRowPassenger", "secondRowDriver", "secondRowPassenger"):
+        state = get_path(doors, f"{key}.lockState")
+        if state:
+            states.append(str(state))
+    if not states:
+        return None
+    return all(state.lower() == "lock" for state in states)
