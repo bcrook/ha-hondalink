@@ -30,7 +30,11 @@ class HondaLinkSensorDescription(SensorEntityDescription):
 
 
 def _tire(path: str):
-    return lambda body: to_int(get_path(body, f"tireStatus.{path}.pressureData.value"))
+    def _value_fn(body: dict[str, Any]) -> int | None:
+        val = to_int(get_path(body, f"tireStatus.{path}.pressureData.value"))
+        return None if val == 510 else val
+
+    return _value_fn
 
 
 SENSORS: tuple[HondaLinkSensorDescription, ...] = (
