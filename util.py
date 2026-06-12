@@ -187,14 +187,19 @@ def dms_to_decimal(value: Any) -> float | None:
     if not value or value == "unknown":
         return None
     try:
-        parts = str(value).split(",")
-        if len(parts) != 3:
-            return None
-        degrees = float(parts[0])
-        sign = -1 if degrees < 0 else 1
-        minutes = float(parts[1])
-        seconds = float(parts[2])
-        return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+        # Try DMS format (e.g., "043,49,56.945")
+        str_val = str(value)
+        if "," in str_val:
+            parts = str_val.split(",")
+            if len(parts) == 3:
+                degrees = float(parts[0])
+                sign = -1 if degrees < 0 else 1
+                minutes = float(parts[1])
+                seconds = float(parts[2])
+                return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+        
+        # Fallback to standard decimal float for MY21 compatibility
+        return float(value)
     except (TypeError, ValueError):
         return None
 
