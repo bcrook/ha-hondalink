@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import logging
 import uuid
 
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import HondaLinkAPI
@@ -34,6 +35,8 @@ from .const import (
 )
 from .coordinator import HondaLinkDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
@@ -45,6 +48,27 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
+
+    # Register services early
+    async def handle_set_climate(call: ServiceCall):
+        """Handle the set_climate service call."""
+        if entry.entry_id not in hass.data[DOMAIN]:
+            _LOGGER.error("HondaLink integration not ready for service call")
+            return
+
+        coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+        await coordinator.api.async_set_climate(
+            temp=call.data.get("temp"),
+            seat_dr=call.data.get("seat_dr"),
+            seat_as=call.data.get("seat_as"),
+            wheel=call.data.get("wheel"),
+            defrost_f=call.data.get("defrost_f"),
+            defrost_r=call.data.get("defrost_r"),
+        )
+
+    if not hass.services.has_service(DOMAIN, "set_climate"):
+        _LOGGER.debug("Registering HondaLink set_climate service")
+        hass.services.async_register(DOMAIN, "set_climate", handle_set_climate)
 
     data = dict(entry.data)
     changed = False

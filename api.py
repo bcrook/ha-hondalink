@@ -274,6 +274,37 @@ class HondaLinkAPI:
             {"device": self._vin(), "pin": self._pin(), "extend": bool(extend)},
         )
 
+    async def async_set_climate(
+        self,
+        *,
+        temp: str | None = None,
+        seat_dr: str | None = None,
+        seat_as: str | None = None,
+        wheel: str | None = None,
+        defrost_f: str | None = None,
+        defrost_r: str | None = None,
+    ) -> HondaLinkCommandResult:
+        """Set climate settings for the 2026 Pilot (NGT)."""
+        body = {
+            "device": self._vin(),
+            "pin": self._pin(),
+        }
+        if temp:
+            body["acTempVal"] = str(temp)
+        if seat_dr:
+            body["seatHeaterDrSetting"] = seat_dr
+        if seat_as:
+            body["seatHeaterAsSetting"] = seat_as
+        if wheel:
+            body["strHeaterSetting"] = wheel
+        if defrost_f:
+            body["acDefFSetting"] = defrost_f
+        if defrost_r:
+            body["acDefRSetting"] = defrost_r
+
+        # NGT uses 'cfl' (climate) subsystem and 'srt' to update/start
+        return await self._async_cig_command("cfl", "srt", body)
+
     async def async_stop_engine(self) -> HondaLinkCommandResult:
         return await self._async_cig_command(
             "eng",

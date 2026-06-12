@@ -126,6 +126,13 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda body: parse_iso_datetime(get_path(body, "timestamp")),
     ),
+    HondaLinkSensorDescription(
+        key="raw_vehicle_status",
+        name="Raw Vehicle Status",
+        icon="mdi:json",
+        value_fn=lambda body: get_path(body, "timestamp"),
+        attr_fn=lambda body: {"data": body},
+    ),
 )
 
 

@@ -17,8 +17,22 @@ def get_path(data: dict[str, Any], path: str, default: Any = None) -> Any:
 
 
 def status_body(data: dict[str, Any]) -> dict[str, Any]:
+    """Extract the vehicle status body from the API response."""
+    # Try the legacy NGT response wrapper
     body = data.get("responseBody")
-    return body if isinstance(body, dict) else {}
+    if isinstance(body, dict) and body:
+        return body
+    
+    # For 2026+ Pilot (NGT), the payload might be at the top level
+    # or inside a 'Body' key (seen in some APK samples)
+    if "doorStatus" in data or "odometer" in data:
+        return data
+        
+    body = data.get("Body")
+    if isinstance(body, dict) and body:
+        return body
+        
+    return data if isinstance(data, dict) else {}
 
 
 def to_int(value: Any) -> int | None:
@@ -102,10 +116,7 @@ def find_12v_battery_status(data: dict[str, Any]) -> Any:
     )
     if direct not in (None, "", "unknown"):
         return value_from_status_node(direct)
-    text_status = _find_12v_text_status(data)
-    if text_status not in (None, "", "unknown"):
-        return text_status
-    return _find_12v_battery_status(data)
+    return "unknown"
 
 
 def find_12v_battery_candidates(data: dict[str, Any]) -> dict[str, Any]:
@@ -132,207 +143,39 @@ def _find_12v_warning_lamp_status(data: dict[str, Any]) -> Any:
             has_12v = "12v" in text_lower or "12 v" in text_lower or "12 volt" in text_lower
             has_battery = "battery" in text_lower or "batt" in text_lower
             if has_12v and has_battery:
-                return (
-                    message.get("condition")
-                    or message.get("status")
-                    or message.get("state")
-                    or message.get("value")
-                    or message.get("message")
-                    or message.get("messageText")
-                    or message.get("text")
-                    or "Detected"
-                )
+                return value_from_status_node(message)
     return None
 
 
-def _find_12v_text_status(value: Any) -> Any:
-    if isinstance(value, dict):
-        text = " ".join(str(item) for item in value.values() if isinstance(item, str))
-        if _text_mentions_12v_battery(text):
-            status = value_from_status_node(value)
-            if status not in (None, "", "unknown") and not _text_mentions_12v_battery(str(status)):
-                return status
-            for key in (
-                "normal",
-                "ok",
-                "active",
-                "on",
-                "off",
-                "severity",
-                "alertState",
-                "lampState",
-                "indicator",
-                "available",
-            ):
-                item = value.get(key)
-                if item not in (None, "", "unknown"):
-                    return item
-            return "Detected"
-        for item in value.values():
-            status = _find_12v_text_status(item)
-            if status not in (None, "", "unknown"):
-                return status
-    elif isinstance(value, list):
-        for item in value:
-            status = _find_12v_text_status(item)
-            if status not in (None, "", "unknown"):
-                return status
-    elif isinstance(value, str) and _text_mentions_12v_battery(value):
-        return value
-    return None
+def _collect_12v_battery_candidates(data: Any, path: str, candidates: dict[str, Any]) -> None:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            new_path = f"{path}.{key}" if path else key
+            if "12v" in key.lower() or "battery" in key.lower():
+                candidates[new_path] = value
+            _collect_12v_battery_candidates(value, new_path, candidates)
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            _collect_12v_battery_candidates(item, f"{path}[{index}]", candidates)
 
 
-def _find_12v_battery_status(value: Any) -> Any:
-    if isinstance(value, dict):
-        for key, item in value.items():
-            if _looks_like_12v_battery_key(str(key)):
-                status = value_from_status_node(item)
-                if status not in (None, "", "unknown"):
-                    return status
-            status = _find_12v_battery_status(item)
-            if status not in (None, "", "unknown"):
-                return status
-    if isinstance(value, list):
-        for item in value:
-            status = _find_12v_battery_status(item)
-            if status not in (None, "", "unknown"):
-                return status
-    return None
-
-
-def _collect_12v_battery_candidates(value: Any, path: str, candidates: dict[str, Any]) -> None:
-    if len(candidates) >= 20:
-        return
-    if isinstance(value, dict):
-        for key, item in value.items():
-            item_path = f"{path}.{key}" if path else str(key)
-            if _looks_like_12v_battery_key(str(key)) or (
-                isinstance(item, str) and _text_mentions_12v_battery(item)
-            ):
-                candidate = value_from_status_node(item)
-                candidates[item_path] = _attribute_safe_value(candidate if candidate is not None else item)
-            _collect_12v_battery_candidates(item, item_path, candidates)
-    elif isinstance(value, list):
-        for index, item in enumerate(value[:20]):
-            _collect_12v_battery_candidates(item, f"{path}.{index}" if path else str(index), candidates)
-
-
-def _collect_leaf_paths(value: Any, path: str, paths: list[str], limit: int) -> None:
+def _collect_leaf_paths(data: Any, path: str, paths: list[str], limit: int) -> None:
     if len(paths) >= limit:
         return
-    if isinstance(value, dict):
-        if not value and path:
-            paths.append(path)
-            return
-        for key, item in value.items():
-            item_path = f"{path}.{key}" if path else str(key)
-            _collect_leaf_paths(item, item_path, paths, limit)
-    elif isinstance(value, list):
-        if not value and path:
-            paths.append(path)
-            return
-        for index, item in enumerate(value[:20]):
-            item_path = f"{path}.{index}" if path else str(index)
-            _collect_leaf_paths(item, item_path, paths, limit)
-    elif path:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            _collect_leaf_paths(value, f"{path}.{key}" if path else key, paths, limit)
+    elif isinstance(data, list):
+        for index, item in enumerate(data):
+            _collect_leaf_paths(item, f"{path}[{index}]", paths, limit)
+    else:
         paths.append(path)
 
 
-def _looks_like_12v_battery_key(key: str) -> bool:
-    key_lower = key.lower()
-    has_12v = "12v" in key_lower or "12_v" in key_lower or "twelvevolt" in key_lower or "twelve_volt" in key_lower
-    has_battery = "battery" in key_lower or "batt" in key_lower
-    has_voltage = "volt" in key_lower
-    has_status = "status" in key_lower or "state" in key_lower or "condition" in key_lower
-    has_aux = "aux" in key_lower or "auxiliary" in key_lower
-    has_power_supply = "powersupply" in key_lower or "power_supply" in key_lower
-    return (
-        has_12v
-        or (has_aux and (has_battery or has_voltage or has_status))
-        or (has_battery and (has_status or has_voltage))
-        or (has_voltage and has_status)
-        or has_power_supply
-    )
-
-
-def _text_mentions_12v_battery(text: str) -> bool:
-    text_lower = text.lower()
-    has_12v = "12v" in text_lower or "12 v" in text_lower or "12 volt" in text_lower
-    has_battery = "battery" in text_lower or "batt" in text_lower
-    return has_12v and has_battery
-
-
-def _attribute_safe_value(value: Any) -> Any:
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    if isinstance(value, dict):
-        safe: dict[str, Any] = {}
-        for key, item in list(value.items())[:10]:
-            safe[str(key)] = _attribute_safe_value(item)
-        return safe
-    if isinstance(value, list):
-        return [_attribute_safe_value(item) for item in value[:10]]
-    return str(value)
-
-
-def parse_iso_datetime(value: Any) -> datetime | None:
-    if not value or value == "unknown":
+def parse_iso_datetime(value: str | None) -> datetime | None:
+    if not value:
         return None
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
-def dms_to_decimal(value: Any) -> float | None:
-    if not value or value == "unknown":
-        return None
-    try:
-        parts = str(value).split(",")
-        if len(parts) != 3:
-            return None
-        degrees = float(parts[0])
-        sign = -1 if degrees < 0 else 1
-        minutes = float(parts[1])
-        seconds = float(parts[2])
-        return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
     except (TypeError, ValueError):
         return None
-
-
-def all_door_locks_locked(body: dict[str, Any]) -> bool | None:
-    doors = get_path(body, "doorStatus", {})
-    if not isinstance(doors, dict):
-        return None
-    states: list[str] = []
-    for key in ("firstRowDriver", "firstRowPassenger", "secondRowDriver", "secondRowPassenger"):
-        state = get_path(doors, f"{key}.lockState")
-        if state:
-            states.append(str(state))
-    if not states:
-        return None
-    return all(state.lower() == "lock" for state in states)
-
-
-def any_open_state(body: dict[str, Any], base: str, keys: list[str], state_key: str = "openState") -> bool | None:
-    found = False
-    for key in keys:
-        value = get_path(body, f"{base}.{key}.{state_key}")
-        if value is not None:
-            found = True
-            if str(value).lower() != "closed":
-                return True
-    return False if found else None
-
-
-def any_light_on(body: dict[str, Any]) -> bool | None:
-    lights = get_path(body, "lightStatus", {})
-    if not isinstance(lights, dict):
-        return None
-    found = False
-    for item in lights.values():
-        if isinstance(item, dict) and "lightState" in item:
-            found = True
-            if str(item.get("lightState")).upper() != "OFF":
-                return True
-    return False if found else None

@@ -7,7 +7,7 @@ set_climate:
       description: Target temperature in Celsius (e.g., "16" to "28").
       example: "22"
       selector:
-        text:
+        text: {}
     seat_dr:
       name: Driver Seat
       description: Setting for the driver seat heater/cooler.
