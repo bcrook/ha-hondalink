@@ -22,7 +22,28 @@ This integration uses the HondaLink Android app API flow, observed while debuggi
 - Lock and unlock entity for supported vehicles
 - Buttons for engine start, engine stop, horn, lights, stop horn/lights, and refresh
 - Device tracker from vehicle GPS data when returned by the HondaLink API
-- Configurable lock and unlock command codes for vehicles or markets that use alternate CIG command names
+- Advanced Climate Control for 2026+ Pilot models (set temperature, heated seats, steering wheel, and defrost via service)
+- Raw status sensor to expose all available NGT telematics fields for research
+
+## 2026 Honda Pilot (NGT Platform) Enhancements
+
+This fork includes specific enhancements for the **2026 Honda Pilot** and other vehicles on the Next Generation Telematics (NGT) platform.
+
+### Raw Status Entity
+A new sensor `sensor.hondalink_raw_vehicle_status` is provided. This entity contains the full, unparsed JSON diagnostic payload from Honda in its `data` attribute. This is useful for identifying new fields not yet mapped to standard sensors.
+
+### Advanced Climate Service
+A new service `hondalink.set_climate` is available to control the granular climate settings supported by the 2026 Pilot.
+
+**Service Data Example:**
+```yaml
+service: hondalink.set_climate
+data:
+  temp: "22"                   # Celsius (16-28)
+  seat_dr: "High Heat"         # "High Heat", "Medium Heat", "Low Heat", "OFF", "High Fan/Cooling"
+  wheel: "HSW ON"              # "HSW ON", "HSW OFF"
+  defrost_f: "MANUAL DEF ON"   # "MANUAL DEF ON", "MANUAL DEF OFF"
+```
 
 ## Status
 
