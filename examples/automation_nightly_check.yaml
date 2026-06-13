@@ -1,0 +1,38 @@
+# --- 2026 Honda Pilot Nightly Security Check ---
+# This automation wakes up the car and checks for open doors/windows.
+# Replace 'mobile_app_your_phone' with your actual notification entity.
+
+alias: "Nightly Car Security Check (Smart Refresh)"
+trigger:
+  - platform: time
+    at: "22:40:00"
+action:
+  # 1. Force the car to wake up
+  - service: button.press
+    target:
+      entity_id: button.hondalink_refresh
+
+  # 2. Wait until the data is actually fresh (max 3 minutes)
+  - wait_template: >
+      {{ as_timestamp(states('sensor.hondalink_last_update')) > as_timestamp(now()) - 60 }}
+    timeout: "00:03:00"
+    continue_on_timeout: false
+
+  # 3. Perform the actual security check
+  - if:
+      - condition: or
+        conditions:
+          - condition: state
+            entity_id: binary_sensor.hondalink_any_door_open
+            state: "on"
+          - condition: state
+            entity_id: binary_sensor.hondalink_any_window_open
+            state: "on"
+          - condition: state
+            entity_id: lock.hondalink_door_lock
+            state: "unlocked"
+    then:
+      - service: notify.mobile_app_your_phone
+        data:
+          title: "Car Security Warning"
+          message: "The Pilot is not secure! Check doors/windows."
