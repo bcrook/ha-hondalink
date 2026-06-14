@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfLength, UnitOfPressure, UnitOfSpeed
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfPressure, UnitOfSpeed
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -134,6 +134,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         key="raw_vehicle_status",
         name="Raw Vehicle Status",
         icon="mdi:json",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda body: get_path(body, "timestamp"),
         attr_fn=lambda body: {"data": body},
     ),
