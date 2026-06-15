@@ -42,7 +42,6 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         key="fuel_level",
         translation_key="fuel_level",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda body: to_int(get_path(body, "fuelLevel.currentLevel.value")),
     ),
@@ -152,6 +151,16 @@ class HondaLinkSensor(HondaLinkEntity, SensorEntity):
     def __init__(self, coordinator, entry: ConfigEntry, description: HondaLinkSensorDescription) -> None:
         super().__init__(coordinator, entry, description.key)
         self.entity_description = description
+
+    @property
+    def icon(self) -> str | None:
+        if self.entity_description.key == "fuel_level":
+            body = status_body(self.coordinator.data or {})
+            ev_soc = get_path(body, "evStatus.vehicleInfo.soc.value")
+            if ev_soc in (None, "unknown"):
+                return "mdi:gas-station"
+            return "mdi:battery"
+        return self.entity_description.icon
 
     @property
     def native_value(self) -> Any:
