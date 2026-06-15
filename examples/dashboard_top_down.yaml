@@ -1,94 +1,92 @@
-# --- 2026 Honda Pilot Top-Down Visualization ---
-# 1. Upload an image of your car to /config/www/pilot_top.png
+ # --- 2026 Honda Pilot Top-Down Visualization ---
+# 1. Upload an image of your car to /config/www/hondalink/pilot_top.png
 # 2. Add a 'Manual' card to your dashboard and paste this YAML.
 # Note: You may need to update the entity IDs (e.g. adding 'driveway_2026_pilot_') 
 # to match your specific vehicle setup.
 
 type: picture-elements
-image: /local/pilot_top.png
+image: /local/hondalink/pilot_top.png
 elements:
-  # --- Remote Engine Status (Hood) ---
   - type: state-icon
-    entity: binary_sensor.hondalink_remote_engine_status
+    icon: mdi:engine
+    entity: sensor.2026_pilot_remote_engine_status
     style:
-      top: 15%
-      left: 50%
-      "--iron-icon-height": 30px
-      "--iron-icon-width": 30px
+      top: 10%
+      left: 48%
+      "--mdc-icon-size": 50px
     title: Engine Status
-
-  # --- Main Lock Status (Roof) ---
   - type: state-icon
-    entity: lock.hondalink_door_lock
+    entity: lock.2026_pilot_doors
     style:
       top: 50%
       left: 50%
-      "--iron-icon-height": 45px
-      "--iron-icon-width": 45px
-
-  # --- WINDOWS ---
+      "--mdc-icon-size": 45px
   - type: state-icon
-    entity: binary_sensor.hondalink_front_driver_window_open
+    entity: binary_sensor.driveway_2026_pilot_front_driver_window
     style:
       top: 35%
-      left: 28%
+      left: 20%
+      "--mdc-icon-size": 30px
+      background-color: rgba(255,255,255,.5)
   - type: state-icon
-    entity: binary_sensor.hondalink_front_passenger_window_open
+    entity: binary_sensor.driveway_2026_pilot_front_passenger_window
     style:
       top: 35%
-      left: 72%
+      left: 75%
+      "--mdc-icon-size": 30px
+      background-color: rgba(255,255,255,.5)
   - type: state-icon
-    entity: binary_sensor.hondalink_rear_left_window_open
+    entity: binary_sensor.driveway_2026_pilot_rear_left_window
     style:
       top: 65%
-      left: 28%
+      left: 20%
+      "--mdc-icon-size": 30px
+      background-color: rgba(255,255,255,.5)
   - type: state-icon
-    entity: binary_sensor.hondalink_rear_right_window_open
+    entity: binary_sensor.driveway_2026_pilot_rear_right_window
     style:
       top: 65%
-      left: 72%
-
-  # --- TIRE PRESSURES (Positioned by the wheels) ---
+      left: 75%
+      "--mdc-icon-size": 30px
+      background-color: rgba(255,255,255,.5)
   - type: state-label
-    entity: sensor.hondalink_front_left_tire_pressure
+    entity: sensor.driveway_2026_pilot_front_left_tire_pressure
     style:
       top: 25%
       left: 15%
       font-size: 12px
-      background-color: "rgba(0,0,0,0.5)"
+      background-color: rgba(255,255,255,0.5)
       padding: 2px
       border-radius: 4px
   - type: state-label
-    entity: sensor.hondalink_front_right_tire_pressure
+    entity: sensor.driveway_2026_pilot_front_right_tire_pressure
     style:
       top: 25%
       left: 85%
       font-size: 12px
-      background-color: "rgba(0,0,0,0.5)"
+      background-color: rgba(255,255,255,0.5)
       padding: 2px
       border-radius: 4px
   - type: state-label
-    entity: sensor.hondalink_rear_left_tire_pressure
+    entity: sensor.driveway_2026_pilot_rear_left_tire_pressure
     style:
       top: 75%
       left: 15%
       font-size: 12px
-      background-color: "rgba(0,0,0,0.5)"
+      background-color: rgba(255,255,255,0.5)
       padding: 2px
       border-radius: 4px
   - type: state-label
-    entity: sensor.hondalink_rear_right_tire_pressure
+    entity: sensor.driveway_2026_pilot_rear_right_tire_pressure
     style:
       top: 75%
       left: 85%
       font-size: 12px
-      background-color: "rgba(0,0,0,0.5)"
+      background-color: rgba(255,255,255,0.5)
       padding: 2px
       border-radius: 4px
-
-  # --- Status Summary (Bottom) ---
   - type: state-label
-    entity: sensor.hondalink_last_update
+    entity: sensor.2026_pilot_last_update
     style:
       top: 92%
       left: 50%
