@@ -85,7 +85,16 @@ class HondaLinkClimate(HondaLinkEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            await self.coordinator.api.async_set_climate(temp=str(int(temp)))
+            body = status_body(self.coordinator.data or {})
+            ac = get_path(body, "remoteEngineStart.acStatus", {})
+            await self.coordinator.api.async_set_climate(
+                temp=str(int(temp)),
+                seat_dr=ac.get("seatHeaterDrSetting"),
+                seat_as=ac.get("seatHeaterAsSetting"),
+                wheel=ac.get("strHeaterSetting"),
+                defrost_f=ac.get("acDefFSetting"),
+                defrost_r=ac.get("acDefRSetting"),
+            )
             await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
