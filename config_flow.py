@@ -16,6 +16,8 @@ from .const import (
     CONF_CLIENT_REG_KEY,
     CONF_COUNTRY,
     CONF_DEVICE_ID,
+    CONF_DISABLE_REDACTION,
+
     CONF_EMAIL,
     CONF_EXPIRES_AT,
     CONF_HIDAS_IDENT,
@@ -234,6 +236,11 @@ class HondaLinkOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Required(CONF_SCAN_INTERVAL, default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)): int,
                 vol.Required(CONF_LOCK_COMMAND, default=options.get(CONF_LOCK_COMMAND, DEFAULT_LOCK_COMMAND)): str,
                 vol.Required(CONF_UNLOCK_COMMAND, default=options.get(CONF_UNLOCK_COMMAND, DEFAULT_UNLOCK_COMMAND)): str,
+                vol.Optional(
+                    CONF_DISABLE_REDACTION,
+                    default=options.get(CONF_DISABLE_REDACTION, False),
+                ): bool,
+
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

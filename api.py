@@ -118,6 +118,7 @@ class HondaLinkAPI:
         session_id: str | None = None,
         lock_command: str = DEFAULT_LOCK_COMMAND,
         unlock_command: str = DEFAULT_UNLOCK_COMMAND,
+        disable_redaction: bool = False,
     ) -> None:
         self.session = session
         self.email = email
@@ -135,6 +136,12 @@ class HondaLinkAPI:
         self.session_id = session_id or str(uuid.uuid4())
         self.lock_command = lock_command or DEFAULT_LOCK_COMMAND
         self.unlock_command = unlock_command or DEFAULT_UNLOCK_COMMAND
+        self.disable_redaction = disable_redaction
+
+    def _redact_payload(self, value: Any) -> Any:
+        if self.disable_redaction:
+            return value
+        return _redact_payload(value)
 
     async def async_register_client(self) -> str:
         data = await self._request_identity(
@@ -145,7 +152,7 @@ class HondaLinkAPI:
         try:
             self.client_reg_key = data["clientregistrationkey"]["client_reg_key"]
         except (KeyError, TypeError) as err:
-            raise HondaLinkAuthError(f"Client registration failed: {_redact_payload(data)}") from err
+            raise HondaLinkAuthError(f"Client registration failed: {self._redact_payload(data)}") from err
         return self.client_reg_key
 
     async def async_login(self) -> None:
@@ -164,13 +171,13 @@ class HondaLinkAPI:
         )
 
         if data.get("request_status") != "success":
-            raise HondaLinkAuthError(f"Login failed: {_redact_payload(data)}")
+            raise HondaLinkAuthError(f"Login failed: {self._redact_payload(data)}")
 
         token = data.get("token") or {}
         user = data.get("user") or {}
         access_token = token.get("access_token")
         if not access_token:
-            raise HondaLinkAuthError(f"Login did not return access_token: {_redact_payload(data)}")
+            raise HondaLinkAuthError(f"Login did not return access_token: {self._redact_payload(data)}")
 
         self.access_token = access_token
         self.refresh_token = token.get("refresh_token")
@@ -201,7 +208,7 @@ class HondaLinkAPI:
     async def async_get_vehicles(self) -> list[dict[str, Any]]:
         data = await self._request_api("GET", "/REST/NGT/MyVehicle/1.0")
         if _lower_status(data.get("status")) not in ("success", ""):
-            raise HondaLinkError(f"Vehicle lookup failed: {_redact_payload(data)}")
+            raise HondaLinkError(f"Vehicle lookup failed: {self._redact_payload(data)}")
         vehicles = data.get("vehicleInfo") or []
         return vehicles if isinstance(vehicles, list) else []
 
@@ -225,7 +232,7 @@ class HondaLinkAPI:
             json_body={"fromDate": "", "toDate": ""},
         )
         if _lower_status(data.get("status")) != "success":
-            raise HondaLinkError(f"Dashboard request failed: {_redact_payload(data)}")
+            raise HondaLinkError(f"Dashboard request failed: {self._redact_payload(data)}")
         return data
 
     async def async_request_dashboard_update(self, vin: str | None = None) -> HondaLinkCommandResult:
@@ -484,9 +491,9 @@ class HondaLinkAPI:
                 raise HondaLinkError(f"Invalid JSON from HondaLink: {response.status} {text}") from err
 
             if response.status in (401, 403):
-                raise HondaLinkAuthError(f"HondaLink authorization failed: {_redact_payload(payload)}")
+                raise HondaLinkAuthError(f"HondaLink authorization failed: {self._redact_payload(payload)}")
             if response.status >= 400:
-                raise HondaLinkError(f"HondaLink request failed: HTTP {response.status} {_redact_payload(payload)}")
+                raise HondaLinkError(f"HondaLink request failed: HTTP {response.status} {self._redact_payload(payload)}")
             return payload
 
     def _api_headers(self) -> dict[str, str]:

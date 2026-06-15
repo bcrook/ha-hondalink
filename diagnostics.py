@@ -28,3 +28,5 @@ async def async_get_config_entry_diagnostics(
         },
         "raw_vehicle_data": coordinator.data,
     }
+
+

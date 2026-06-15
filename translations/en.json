@@ -38,7 +38,9 @@
           "pin": "Remote PIN",
           "scan_interval": "Polling interval in minutes",
           "lock_command": "Lock command code",
-          "unlock_command": "Unlock command code"
+          "unlock_command": "Unlock command code",
+          "disable_redaction": "Disable redaction of secrets from raw vehicle data"
+
         }
       }
     }

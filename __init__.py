@@ -16,7 +16,9 @@ from .const import (
     CONF_CLIENT_REG_KEY,
     CONF_COUNTRY,
     CONF_DEVICE_ID,
+    CONF_DISABLE_REDACTION,
     CONF_EMAIL,
+
     CONF_EXPIRES_AT,
     CONF_HIDAS_IDENT,
     CONF_LANGUAGE,
@@ -102,6 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session_id=data[CONF_SESSION_ID],
         lock_command=entry.options.get(CONF_LOCK_COMMAND, DEFAULT_LOCK_COMMAND),
         unlock_command=entry.options.get(CONF_UNLOCK_COMMAND, DEFAULT_UNLOCK_COMMAND),
+        disable_redaction=entry.options.get(CONF_DISABLE_REDACTION, False),
     )
     await api.async_ensure_login()
 
@@ -117,8 +120,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinator,
     }
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -126,3 +136,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
+
