@@ -170,3 +170,9 @@ python -m py_compile .\api.py .\config_flow.py
 ```
 
 HACS and hassfest workflow files are included under `.github/workflows/`, but nothing is published or released from this local workspace.
+
+## Samples
+
+# Dashboard Image
+<img width="393" height="666" alt="image" src="https://github.com/user-attachments/assets/9abca919-a3af-475b-a7f0-f48c620c6792" />
+
