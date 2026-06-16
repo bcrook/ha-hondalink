@@ -5,7 +5,7 @@ from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfPressure, UnitOfSpeed
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,7 +37,22 @@ def _tire(path: str):
     return _value_fn
 
 
+def _cabin_temp(body: dict[str, Any]) -> float | None:
+    val = get_path(body, "temperature.cabin.value")
+    if val in (None, "unknown", "Not Used"):
+        return None
+    return to_float(val)
+
+
 SENSORS: tuple[HondaLinkSensorDescription, ...] = (
+    HondaLinkSensorDescription(
+        key="cabin_temperature",
+        name="Cabin Temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_cabin_temp,
+    ),
     HondaLinkSensorDescription(
         key="fuel_level",
         translation_key="fuel_level",
