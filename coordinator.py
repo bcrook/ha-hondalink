@@ -19,6 +19,7 @@ class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: HondaLinkAPI) -> None:
         self.api = api
         self.vin = entry.data[CONF_VIN]
+        self.last_response_headers: dict[str, str] = {}
         interval = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
         super().__init__(
             hass,
@@ -29,7 +30,9 @@ class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            return await self.api.async_get_dashboard_latest(self.vin)
+            data = await self.api.async_get_dashboard_latest(self.vin)
+            self.last_response_headers = self.api.last_response_headers
+            return data
         except HondaLinkError as err:
             raise UpdateFailed(str(err)) from err
 

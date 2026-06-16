@@ -29,6 +29,12 @@ async def async_get_config_entry_diagnostics(
         }
 
     raw_vehicle_data = coordinator.data
+    raw_vehicle_headers = dict(coordinator.last_response_headers)
+
+    if not disable_redaction:
+        for key in list(raw_vehicle_headers.keys()):
+            if key.lower() in ("set-cookie", "cookie", "authorization", "proxy-authorization"):
+                raw_vehicle_headers[key] = "**REDACTED**"
 
     return {
         "entry": {
@@ -36,6 +42,7 @@ async def async_get_config_entry_diagnostics(
             "options": dict(entry.options),
         },
         "raw_vehicle_data": raw_vehicle_data,
+        "raw_vehicle_headers": raw_vehicle_headers,
     }
 
 

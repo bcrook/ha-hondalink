@@ -137,6 +137,7 @@ class HondaLinkAPI:
         self.lock_command = lock_command or DEFAULT_LOCK_COMMAND
         self.unlock_command = unlock_command or DEFAULT_UNLOCK_COMMAND
         self.disable_redaction = disable_redaction
+        self.last_response_headers: dict[str, str] = {}
 
     def _redact_payload(self, value: Any) -> Any:
         if self.disable_redaction:
@@ -484,6 +485,7 @@ class HondaLinkAPI:
             data=data,
             json=json_body,
         ) as response:
+            self.last_response_headers = dict(response.headers)
             text = await response.text()
             try:
                 payload = json.loads(text) if text else {}
