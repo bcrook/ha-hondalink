@@ -1,0 +1,206 @@
+    {
+  "doorStatus": {
+    "firstRowDriver": {
+      "lockState": "Unlock",
+      "openState": "Closed"
+    },
+    "firstRowPassenger": {
+      "lockState": "Unlock",
+      "openState": "Closed"
+    },
+    "hood": {
+      "openState": "unknown"
+    },
+    "secondRowDriver": {
+      "lockState": "Unlock",
+      "openState": "Closed"
+    },
+    "secondRowPassenger": {
+      "lockState": "Unlock",
+      "openState": "Closed"
+    },
+    "trunk": {
+      "openState": "Open"
+    }
+  },
+  "enlargedWarnings": [],
+  "evStatus": {
+    "vehicleInfo": {
+      "acStatus": {
+        "value": "unknown"
+      },
+      "chargeMode": {
+        "value": "unknown"
+      },
+      "evRange": {
+        "value": "unknown"
+      },
+      "hydrogenRemaining": {
+        "unit": "%",
+        "value": "unknown"
+      },
+      "igStatus": {
+        "value": "unknown"
+      },
+      "intTemp": {},
+      "plugStatus": {},
+      "soc": {
+        "value": "unknown"
+      },
+      "timeToTargetSoc": {
+        "value": "unknown"
+      },
+      "timerTzone": "unknown",
+      "totalRange": {
+        "unit": "unknown",
+        "value": "unknown"
+      }
+    }
+  },
+  "fuelLevel": {
+    "currentLevel": {
+      "unit": "%",
+      "value": "34"
+    },
+    "driveRange": {
+      "unit": "km",
+      "value": "161"
+    }
+  },
+  "gpsData": {
+    "accuracy": {
+      "radius": "6"
+    },
+    "coordinate": {
+      "datum": "wgs84",
+      "format": "dms",
+      "latitude": "043,49,57.007",
+      "longitude": "-078,59,18.085"
+    },
+    "courseHeading": "39.0",
+    "dtTime": "2026-06-13T14:43:10+00:00",
+    "tsuGpsAcqTime": "20260612222052",
+    "tsuGpsPosStatus": "Not positioning",
+    "velocity": {
+      "unit": "km/h",
+      "value": "0.0"
+    }
+  },
+  "lightStatus": {
+    "brightLights": {
+      "lightState": "unknown"
+    },
+    "fogLights": {
+      "lightState": "unknown"
+    },
+    "headlights": {
+      "lightState": "unknown"
+    },
+    "parkingLights": {
+      "lightState": "unknown"
+    },
+    "rearFogLights": {
+      "lightState": "OFF"
+    }
+  },
+  "maintenanceMinder": {
+    "data": [
+      {
+        "languageCode": "en"
+      }
+    ]
+  },
+  "odometer": {
+    "unit": "km",
+    "value": "3369"
+  },
+  "oilLife": {
+    "unit": "%",
+    "value": "80"
+  },
+  "remoteEngineStart": {
+    "acStatus": {
+      "acDefFSetting": "Undefined",
+      "acDefRSetting": "Undefined",
+      "acTempVal": "Not Used",
+      "seatHeaterAsSetting": "Undefined",
+      "seatHeaterDrSetting": "Undefined",
+      "strHeaterSetting": "HSW OFF"
+    },
+    "delayStart": {
+      "delayStartTime": "unknown"
+    },
+    "vehicleStartEvent": {
+      "resRequester": "NO",
+      "resStartCounter": "0",
+      "resStatus": "OFF",
+      "resTime": "0"
+    }
+  },
+  "temperature": {
+    "cabin": {
+      "unit": "c",
+      "value": "unknown"
+    }
+  },
+  "timestamp": "2026-06-13T14:43:10+00:00",
+  "tireStatus": {
+    "frontLeft": {
+      "pressureData": {
+        "unit": "kPa",
+        "value": "270"
+      },
+      "warningState": {
+        "value": "OFF"
+      }
+    },
+    "frontRight": {
+      "pressureData": {
+        "unit": "kPa",
+        "value": "270"
+      },
+      "warningState": {
+        "value": "OFF"
+      }
+    },
+    "rearLeft": {
+      "pressureData": {
+        "unit": "kPa",
+        "value": "274"
+      },
+      "warningState": {
+        "value": "OFF"
+      }
+    },
+    "rearRight": {
+      "pressureData": {
+        "unit": "kPa",
+        "value": "274"
+      },
+      "warningState": {
+        "value": "OFF"
+      }
+    }
+  },
+  "warningLamps": {
+    "data": [
+      {
+        "languageCode": "en"
+      }
+    ]
+  },
+  "windowStatus": {
+    "frontWindowAS": {
+      "closeState": "Open"
+    },
+    "frontWindowDR": {
+      "closeState": "Open"
+    },
+    "rearWindowRL": {
+      "closeState": "Open"
+    },
+    "rearWindowRR": {
+      "closeState": "Open"
+    }
+  }
+}

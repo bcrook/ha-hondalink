@@ -20,6 +20,8 @@ CONF_VEHICLE_INFO = "vehicle_info"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_LOCK_COMMAND = "lock_command"
 CONF_UNLOCK_COMMAND = "unlock_command"
+CONF_DISABLE_REDACTION = "disable_redaction"
+
 
 DEFAULT_NAME = "HondaLink"
 DEFAULT_COUNTRY = "US"

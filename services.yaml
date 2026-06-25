@@ -1,0 +1,65 @@
+set_climate:
+  name: Set Climate
+  description: Sends advanced climate and seat settings to the 2026 Honda Pilot (NGT).
+  fields:
+    temp:
+      name: Target Temperature
+      description: Target temperature in Celsius (e.g., "16" to "28").
+      example: "22"
+      selector:
+        text: {}
+    seat_dr:
+      name: Driver Seat
+      description: Setting for the driver seat heater/cooler.
+      example: "High Heat"
+      selector:
+        select:
+          options:
+            - "OFF"
+            - "High Heat"
+            - "Medium Heat"
+            - "Low Heat"
+            - "High Fan/Cooling"
+            - "Medium Fan/Cooling"
+            - "Low Fan/Cooling"
+    seat_as:
+      name: Passenger Seat
+      description: Setting for the passenger seat heater/cooler.
+      example: "OFF"
+      selector:
+        select:
+          options:
+            - "OFF"
+            - "High Heat"
+            - "Medium Heat"
+            - "Low Heat"
+            - "High Fan/Cooling"
+            - "Medium Fan/Cooling"
+            - "Low Fan/Cooling"
+    wheel:
+      name: Steering Wheel
+      description: Heated steering wheel toggle.
+      example: "HSW ON"
+      selector:
+        select:
+          options:
+            - "HSW ON"
+            - "HSW OFF"
+    defrost_f:
+      name: Front Defrost
+      description: Front windshield defrost toggle.
+      example: "MANUAL DEF ON"
+      selector:
+        select:
+          options:
+            - "MANUAL DEF ON"
+            - "MANUAL DEF OFF"
+    defrost_r:
+      name: Rear Defrost
+      description: Rear windshield and mirror defrost toggle.
+      example: "RRDEF ON"
+      selector:
+        select:
+          options:
+            - "RRDEF ON"
+            - "RRDEF OFF"

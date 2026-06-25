@@ -17,7 +17,15 @@ def get_path(data: dict[str, Any], path: str, default: Any = None) -> Any:
 
 
 def status_body(data: dict[str, Any]) -> dict[str, Any]:
+    # Try the legacy NGT response wrapper
     body = data.get("responseBody")
+    if isinstance(body, dict) and body:
+        return body
+
+    # For 2026+ Pilot (NGT), the payload might be at the top level
+    if "doorStatus" in data or "odometer" in data:
+        return data
+
     return body if isinstance(body, dict) else {}
 
 
@@ -280,7 +288,7 @@ def parse_iso_datetime(value: Any) -> datetime | None:
         return None
     try:
         return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    except ValueError:
+    except (TypeError, ValueError):
         return None
 
 
@@ -288,16 +296,21 @@ def dms_to_decimal(value: Any) -> float | None:
     if not value or value == "unknown":
         return None
     try:
-        parts = str(value).split(",")
-        if len(parts) != 3:
-            return None
-        degrees = float(parts[0])
-        sign = -1 if degrees < 0 else 1
-        minutes = float(parts[1])
-        seconds = float(parts[2])
-        return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+        # Try DMS format (e.g., "043,49,56.945")
+        str_val = str(value)
+        if "," in str_val:
+            parts = str_val.split(",")
+            if len(parts) == 3:
+                degrees = float(parts[0])
+                sign = -1 if degrees < 0 else 1
+                minutes = float(parts[1])
+                seconds = float(parts[2])
+                return sign * (abs(degrees) + minutes / 60 + seconds / 3600)
+
+        return float(value)
     except (TypeError, ValueError):
         return None
+
 
 
 def all_door_locks_locked(body: dict[str, Any]) -> bool | None:

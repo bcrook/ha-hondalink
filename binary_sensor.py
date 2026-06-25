@@ -48,6 +48,30 @@ BINARY_SENSORS: tuple[HondaLinkBinarySensorDescription, ...] = (
         value_fn=lambda body: any_open_state(body, "windowStatus", WINDOW_KEYS, "closeState"),
     ),
     HondaLinkBinarySensorDescription(
+        key="front_driver_window_open",
+        name="Front Driver Window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda body: any_open_state(body, "windowStatus", ["frontWindowDR"], "closeState"),
+    ),
+    HondaLinkBinarySensorDescription(
+        key="front_passenger_window_open",
+        name="Front Passenger Window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda body: any_open_state(body, "windowStatus", ["frontWindowAS"], "closeState"),
+    ),
+    HondaLinkBinarySensorDescription(
+        key="rear_left_window_open",
+        name="Rear Left Window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda body: any_open_state(body, "windowStatus", ["rearWindowRL"], "closeState"),
+    ),
+    HondaLinkBinarySensorDescription(
+        key="rear_right_window_open",
+        name="Rear Right Window",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda body: any_open_state(body, "windowStatus", ["rearWindowRR"], "closeState"),
+    ),
+    HondaLinkBinarySensorDescription(
         key="any_light_on",
         translation_key="any_light_on",
         device_class=BinarySensorDeviceClass.LIGHT,
