@@ -27,6 +27,42 @@ from .util import (
 class HondaLinkSensorDescription(SensorEntityDescription):
     value_fn: Callable[[dict[str, Any]], Any]
     attr_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    unit_fn: Callable[[dict[str, Any]], str | None] | None = None
+
+
+def _parse_length_unit(unit: str | None) -> str | None:
+    if not unit:
+        return None
+    u = str(unit).lower()
+    if u in ("km", "kilometers", "kilometer"):
+        return UnitOfLength.KILOMETERS
+    if u in ("mi", "miles", "mile"):
+        return UnitOfLength.MILES
+    return unit
+
+
+def _parse_speed_unit(unit: str | None) -> str | None:
+    if not unit:
+        return None
+    u = str(unit).lower()
+    if u in ("km/h", "kmh"):
+        return UnitOfSpeed.KILOMETERS_PER_HOUR
+    if u in ("mph", "mi/h"):
+        return UnitOfSpeed.MILES_PER_HOUR
+    return unit
+
+
+def _parse_pressure_unit(unit: str | None) -> str | None:
+    if not unit:
+        return None
+    u = str(unit).lower()
+    if u == "kpa":
+        return UnitOfPressure.KPA
+    if u == "psi":
+        return UnitOfPressure.PSI
+    if u == "bar":
+        return UnitOfPressure.BAR
+    return unit
 
 
 def _tire(path: str):
@@ -42,6 +78,13 @@ def _cabin_temp(body: dict[str, Any]) -> float | None:
     if val in (None, "unknown", "Not Used"):
         return None
     return to_float(val)
+
+
+def _tire_unit(path: str):
+    def _unit_fn(body: dict[str, Any]) -> str | None:
+        return _parse_pressure_unit(get_path(body, f"tireStatus.{path}.pressureData.unit"))
+
+    return _unit_fn
 
 
 SENSORS: tuple[HondaLinkSensorDescription, ...] = (
@@ -67,6 +110,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda body: to_int(get_path(body, "fuelLevel.driveRange.value")),
+        unit_fn=lambda body: _parse_length_unit(get_path(body, "fuelLevel.driveRange.unit")),
     ),
     HondaLinkSensorDescription(
         key="odometer",
@@ -75,6 +119,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda body: to_int(get_path(body, "odometer.value")),
+        unit_fn=lambda body: _parse_length_unit(get_path(body, "odometer.unit")),
     ),
     HondaLinkSensorDescription(
         key="oil_life",
@@ -100,6 +145,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_tire("frontLeft"),
+        unit_fn=_tire_unit("frontLeft"),
     ),
     HondaLinkSensorDescription(
         key="front_right_tire_pressure",
@@ -108,6 +154,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_tire("frontRight"),
+        unit_fn=_tire_unit("frontRight"),
     ),
     HondaLinkSensorDescription(
         key="rear_left_tire_pressure",
@@ -116,6 +163,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_tire("rearLeft"),
+        unit_fn=_tire_unit("rearLeft"),
     ),
     HondaLinkSensorDescription(
         key="rear_right_tire_pressure",
@@ -124,6 +172,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_tire("rearRight"),
+        unit_fn=_tire_unit("rearRight"),
     ),
     HondaLinkSensorDescription(
         key="vehicle_speed",
@@ -132,6 +181,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda body: to_float(get_path(body, "gpsData.velocity.value")),
+        unit_fn=lambda body: _parse_speed_unit(get_path(body, "gpsData.velocity.unit")),
     ),
     HondaLinkSensorDescription(
         key="remote_engine_status",
@@ -178,6 +228,13 @@ class HondaLinkSensor(HondaLinkEntity, SensorEntity):
         return self.entity_description.icon
 
     @property
+    def native_unit_of_measurement(self) -> str | None:
+        if self.entity_description.unit_fn is not None:
+            if unit := self.entity_description.unit_fn(status_body(self.coordinator.data or {})):
+                return unit
+        return self.entity_description.native_unit_of_measurement
+
+    @property
     def native_value(self) -> Any:
         return self.entity_description.value_fn(status_body(self.coordinator.data or {}))
 
@@ -185,4 +242,14 @@ class HondaLinkSensor(HondaLinkEntity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         if self.entity_description.attr_fn is None:
             return None
-        return self.entity_description.attr_fn(status_body(self.coordinator.data or {}))
+        attrs = self.entity_description.attr_fn(status_body(self.coordinator.data or {}))
+        if self.entity_description.key == "raw_vehicle_status" and hasattr(self.coordinator, "last_response_headers"):
+            attrs = dict(attrs) if attrs else {}
+            headers = dict(self.coordinator.last_response_headers)
+            disable_redaction = getattr(self.coordinator.api, "disable_redaction", False)
+            if not disable_redaction:
+                for key in list(headers.keys()):
+                    if key.lower() in ("set-cookie", "cookie", "authorization", "proxy-authorization"):
+                        headers[key] = "**REDACTED**"
+            attrs["headers"] = headers
+        return attrs

@@ -46,6 +46,14 @@ class HondaLinkClimate(HondaLinkEntity, ClimateEntity):
         super().__init__(coordinator, entry, "climate")
 
     @property
+    def temperature_unit(self) -> str:
+        body = status_body(self.coordinator.data or {})
+        unit = get_path(body, "temperature.cabin.unit")
+        if unit and str(unit).lower() == "f":
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
+
+    @property
     def hvac_mode(self) -> HVACMode:
         body = status_body(self.coordinator.data or {})
         status = get_path(body, "remoteEngineStart.vehicleStartEvent.resStatus", "").upper()
