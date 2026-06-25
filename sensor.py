@@ -65,6 +65,17 @@ def _parse_pressure_unit(unit: str | None) -> str | None:
     return unit
 
 
+def _parse_temperature_unit(unit: str | None) -> str | None:
+    if not unit:
+        return None
+    u = str(unit).lower()
+    if u == "c":
+        return UnitOfTemperature.CELSIUS
+    if u == "f":
+        return UnitOfTemperature.FAHRENHEIT
+    return unit
+
+
 def _tire(path: str):
     def _value_fn(body: dict[str, Any]) -> int | None:
         val = to_int(get_path(body, f"tireStatus.{path}.pressureData.value"))
@@ -95,6 +106,7 @@ SENSORS: tuple[HondaLinkSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_cabin_temp,
+        unit_fn=lambda body: _parse_temperature_unit(get_path(body, "temperature.cabin.unit")),
     ),
     HondaLinkSensorDescription(
         key="fuel_level",
