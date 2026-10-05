@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: HondaLinkAPI) -> None:
+        self.entry = entry
         self.api = api
         self.vin = entry.data[CONF_VIN]
         self.last_response_headers: dict[str, str] = {}
@@ -32,6 +33,9 @@ class HondaLinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             data = await self.api.async_get_dashboard_latest(self.vin)
             self.last_response_headers = self.api.last_response_headers
+            auth_data = self.api.export_auth_data()
+            if any(self.entry.data.get(k) != v for k, v in auth_data.items() if v is not None):
+                self.hass.config_entries.async_update_entry(self.entry, data={**self.entry.data, **auth_data})
             return data
         except HondaLinkError as err:
             raise UpdateFailed(str(err)) from err
